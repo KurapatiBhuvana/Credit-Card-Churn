@@ -1,9 +1,8 @@
-name: Sync R1 to R2 on Merge
+name: Sync R1 to R2
 
 on:
   push:
-    branches: 
-      - R1  # Only trigger when PR is merged into R1
+    branches: [R1]
 
 jobs:
   sync-branches:
@@ -11,31 +10,34 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      actions: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          ref: R1  # Explicitly checkout R1 branch
+          ref: R1
 
       - name: Setup GH CLI
         run: |
           gh --version || sudo apt-get install gh -y
           gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Create PR from R1 to R2
-        id: create-pr
+      - name: Create and merge PR
+        id: sync
         run: |
+          # Create PR and capture URL
           PR_URL=$(gh pr create \
             --head R1 \
             --base R2 \
             --title "Auto-sync: R1 → R2" \
-            --body "Automated PR to sync changes from R1 to R2")
+            --body "Automated sync")
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
+          
+          # Merge PR
+          gh pr merge "$PR_URL" --merge --admin
 
-      - name: Auto-merge the PR
+      - name: Trigger deployment with PR URL
         run: |
-          gh pr merge --merge --admin  "$PR_URL"
-          gh workflow run deploy.yaml --ref R2
-
-        env:
-          PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
+          gh workflow run deploy.yaml \
+            --ref R2 \
+            -f pr_url="${{ steps.sync.outputs.PR_URL }}"
