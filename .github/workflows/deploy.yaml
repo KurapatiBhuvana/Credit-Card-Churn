@@ -1,18 +1,13 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
-    inputs:
-      pr_url:
-        description: 'URL of the PR that triggered this'
-        required: false
   pull_request:
     types: [closed]
     branches: [R1, R2]
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     
     steps:
