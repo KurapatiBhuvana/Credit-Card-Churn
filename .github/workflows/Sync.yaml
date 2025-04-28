@@ -7,7 +7,6 @@ on:
 
 jobs:
   sync-branches:
-  
     runs-on: ubuntu-latest
     permissions:
       contents: write
