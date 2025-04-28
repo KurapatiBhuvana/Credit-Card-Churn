@@ -40,23 +40,24 @@ jobs:
         env:
           PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
 
-      - name: Simulate pull_request:closed webhook
+      - name: Simulate PR Close
+        env:
+          ADMIN_PAT: ${{ secrets.ADMIN_PAT }}
         run: |
-          # Get PR details
-          PR_JSON=$(gh pr view 30 --json headRefName,baseRefName,mergedAt,state)
+          PR_JSON=$(gh pr view 31 --json headRefName,baseRefName,state,number \
+            --jq '{headRefName, baseRefName, state, merged: (.state == "MERGED")}')
           
-          # Send simulated webhook (requires admin PAT)
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.ADMIN_PAT }}" \
+          curl -v -X POST \
+            -H "Authorization: token $ADMIN_PAT" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/dispatches" \
-            -d '{
-              "event_type": "simulated_pr_close",
-              "client_payload": {
-                "action": "closed",
-                "merged": '"$(jq -r '.mergedAt != null' <<< "$PR_JSON")"',,
-                "pull_request": '$PR_JSON'
-              }
-            }'
-        env:
-          ADMIN_PAT: ${{ secrets.ADMIN_PAT }}  # PAT with repo/admin permissions
+            -d "$(jq -n \
+              --argjson pr "$PR_JSON" \
+              '{
+                "event_type": "simulated_pr_close",
+                "client_payload": {
+                  "action": "closed",
+                  "pull_request": $pr
+                }
+              }')"
+             
