@@ -1,0 +1,39 @@
+name: Sync R1 to R2 on Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: 
+      - R1  # Only trigger when PR is merged into R1
+
+jobs:
+  sync-branches:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: R1  # Explicitly checkout R1 branch
+
+      - name: Setup GH CLI
+        run: |
+          gh --version || sudo apt-get install gh -y
+          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Create PR from R1 to R2
+        id: create-pr
+        run: |
+          PR_URL=$(gh pr create \
+            --head R1 \
+            --base R2 \
+            --title "Auto-sync: R1 → R2" \
+            --body "Automated PR to sync changes from R1 to R2")
+          echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
+
+      - name: Auto-merge the PR
+        run: |
+          gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
