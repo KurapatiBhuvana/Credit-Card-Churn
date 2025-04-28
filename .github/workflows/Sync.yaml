@@ -43,7 +43,7 @@ jobs:
       - name: Simulate pull_request:closed webhook
         run: |
           # Get PR details
-          PR_JSON=$(gh pr view ${{ steps.create-pr.outputs.PR_NUMBER }} --json headRefName,baseRefName,merged)
+          PR_JSON=$(gh pr view 30 --json headRefName,baseRefName,mergedAt,state)
           
           # Send simulated webhook (requires admin PAT)
           curl -X POST \
