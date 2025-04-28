@@ -21,12 +21,22 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.ref || 'R2' }}
           
-     
-          
-      - name: Log deployment context
+      - name: Extract PR info (if dispatched)
+        if: github.event_name == 'workflow_dispatch' && inputs.pr_url
+        id: pr-info
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Extract PR number from URL
+          PR_NUMBER=$(echo "${{ inputs.pr_url }}" | grep -oE '[0-9]+$')
+          
+          # Get PR details using GH CLI
+          gh pr view $PR_NUMBER --json baseRefName,headRefName > pr.json
+          echo "base_ref=$(jq -r '.baseRefName' pr.json)" >> $GITHUB_OUTPUT
+          echo "head_ref=$(jq -r '.headRefName' pr.json)" >> $GITHUB_OUTPUT
+          
+      - name: Log deployment context
+        run: |
           echo "Triggered by: ${{ github.event_name }}"
-          echo "Base ref: ${{ github.event.pull_request.base.ref }}"
-          echo "Head ref: ${{ github.event.pull_request.head.ref }}"
+          echo "Base ref: ${{ github.event.pull_request.base.ref || steps.pr-info.outputs.base_ref || 'R2' }}"
+          echo "Head ref: ${{ github.event.pull_request.head.ref || steps.pr-info.outputs.head_ref || 'R1' }}"
