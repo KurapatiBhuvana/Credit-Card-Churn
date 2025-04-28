@@ -36,7 +36,7 @@ jobs:
 
       - name: Merge PR (admin override)
         run: |
-          gh pr merge "$PR_URL" --merge --admin --delete-branch
+          gh pr merge "$PR_URL" --merge --admin 
         env:
           PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
 
