@@ -10,7 +10,7 @@ from collections import Counter
 
 
 
-# Download the file to a local disc
+
 
 df  = pd.read_csv("credit_card_churn.csv")
 #df.head()
