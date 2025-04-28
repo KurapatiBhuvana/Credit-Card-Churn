@@ -1,25 +1,40 @@
-name: Deploy on PR Merge to R1 or R2
+name: Deploy
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_url:
+        description: 'URL of the PR that triggered this'
+        required: false
   pull_request:
     types: [closed]
-    branches: 
-      - R1
-      - R2
-  push:
-    branches: R2
+    branches: [R1, R2]
 
 jobs:
   deploy:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.base.ref }}  # Checks out the target branch (R1/R2)
-
-      - name: Log deployment trigger
+          ref: ${{ github.event.pull_request.base.ref || 'R2' }}
+          
+      - name: Extract PR info (if dispatched)
+        if: github.event_name == 'workflow_dispatch' && inputs.pr_url
+        id: pr-info
         run: |
-          echo "Deployment triggered for ${{ github.event.pull_request.base.ref }} branch"
+          # Extract PR number from URL
+          PR_NUMBER=$(echo "${{ inputs.pr_url }}" | grep -oE '[0-9]+$')
+          
+          # Get PR details using GH CLI
+          gh pr view $PR_NUMBER --json baseRefName,headRefName > pr.json
+          echo "base_ref=$(jq -r '.baseRefName' pr.json)" >> $GITHUB_OUTPUT
+          echo "head_ref=$(jq -r '.headRefName' pr.json)" >> $GITHUB_OUTPUT
+          
+      - name: Log deployment context
+        run: |
+          echo "Triggered by: ${{ github.event_name }}"
+          echo "Base ref: ${{ github.event.pull_request.base.ref || steps.pr-info.outputs.base_ref || 'R2' }}"
+          echo "Head ref: ${{ github.event.pull_request.head.ref || steps.pr-info.outputs.head_ref || 'R1' }}"
