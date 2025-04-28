@@ -7,6 +7,7 @@ import seaborn as sns
 import missingno as msn
 from collections import Counter
 
+#test
 
 
 
@@ -14,7 +15,7 @@ from collections import Counter
 
 df  = pd.read_csv("credit_card_churn.csv")
 #df.head()
-
+import pandas as pd
 
 # To get numerical values the catagorical columns need to be chnaged. Hence label encoding is done 
 from sklearn.metrics import classification_report
