@@ -37,5 +37,6 @@ jobs:
       - name: Auto-merge the PR
         run: |
           gh pr merge --auto --merge --admin  "$PR_URL"
+
         env:
           PR_URL: ${{ steps.create-pr.outputs.PR_URL }}

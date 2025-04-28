@@ -15,6 +15,8 @@ from collections import Counter
 df  = pd.read_csv("credit_card_churn.csv")
 #df.head()
 
+import pandas as pd
+import numpy as np
 
 # To get numerical values the catagorical columns need to be chnaged. Hence label encoding is done 
 from sklearn.metrics import classification_report
