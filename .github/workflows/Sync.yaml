@@ -34,30 +34,16 @@ jobs:
           echo "PR_URL=$PR_URL" >> $GITHUB_OUTPUT
           echo "PR_NUMBER=$(echo $PR_URL | grep -oE '[0-9]+$')" >> $GITHUB_OUTPUT
 
-      - name: Merge PR (admin override)
+      - name: Merge PR via UI API
         run: |
-          gh pr merge "$PR_URL" --merge --admin 
-        env:
-          PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
-
-      - name: Simulate PR Close
-        env:
-          ADMIN_PAT: ${{ secrets.ADMIN_PAT }}
-        run: |
-          PR_JSON=$(gh pr view 31 --json headRefName,baseRefName,state,number \
-            --jq '{headRefName, baseRefName, state, merged: (.state == "MERGED")}')
+          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
           
-          curl -v -X POST \
+          # Merge via GitHub's UI endpoint (not CLI)
+          curl -X PUT \
             -H "Authorization: token $ADMIN_PAT" \
             -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/dispatches" \
-            -d "$(jq -n \
-              --argjson pr "$PR_JSON" \
-              '{
-                "event_type": "simulated_pr_close",
-                "client_payload": {
-                  "action": "closed",
-                  "pull_request": $pr
-                }
-              }')"
-             
+            "https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/merge" \
+            -d '{"merge_method":"merge"}'
+        env:
+          PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
+          ADMIN_PAT: ${{ secrets.ADMIN_PAT }}
