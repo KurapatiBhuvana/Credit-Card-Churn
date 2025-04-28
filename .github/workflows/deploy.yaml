@@ -1,0 +1,23 @@
+name: Deploy on PR Merge to R1 or R2
+
+on:
+  pull_request:
+    types: [closed]
+    branches: 
+      - R1
+      - R2
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}  # Checks out the target branch (R1/R2)
+
+      - name: Log deployment trigger
+        run: |
+          echo "Deployment triggered for ${{ github.event.pull_request.base.ref }} branch"
