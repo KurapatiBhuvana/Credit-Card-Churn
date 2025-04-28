@@ -35,7 +35,7 @@ jobs:
       - name: Auto-merge the PR
         run: |
           gh pr merge --merge --admin  "$PR_URL"
-          gh workflow run deployment.yaml --ref R2
+          gh workflow run deploy.yaml --ref R2
 
         env:
           PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
