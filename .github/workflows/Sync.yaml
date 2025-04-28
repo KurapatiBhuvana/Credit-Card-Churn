@@ -54,7 +54,7 @@ jobs:
               "event_type": "simulated_pr_close",
               "client_payload": {
                 "action": "closed",
-                "merged": true,
+                "merged": '"$(jq -r '.mergedAt != null' <<< "$PR_JSON")"',,
                 "pull_request": '$PR_JSON'
               }
             }'
