@@ -1,14 +1,12 @@
 name: Sync R1 to R2 on Merge
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches: 
       - R1  # Only trigger when PR is merged into R1
 
 jobs:
   sync-branches:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -36,6 +34,7 @@ jobs:
 
       - name: Auto-merge the PR
         run: |
-          gh pr merge --merge --admin "$PR_URL"
+          gh pr merge --merge --admin  "$PR_URL"
+
         env:
           PR_URL: ${{ steps.create-pr.outputs.PR_URL }}
